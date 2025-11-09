@@ -37,6 +37,14 @@ function fetchUserPosts(userId) {
     return new Promise(function(resolve, reject) {
         
         setTimeout(function() {
+            
+            // PART 4 TASK F: Unreliable function
+            // Will randomly reject with a 30% chance.
+            if (Math.random() <= 0.3) {
+                reject(new Error(`Failed to fetch posts for user id ${userId}`));
+                return;
+            }
+            
             const posts = [ 
                 {postId: 12459, userId: userId, title: "Sample post 1", content: "Lorem ipsum..."},
                 {postId: 24902, userId: userId, title: "Sample post 2", content: "...dolor sit amet..."},
@@ -73,23 +81,51 @@ async function sequentialDataFetch(userId) {
     const startTime = Date.now(); // Track a timestamp of the current moment.
     
     try {
-        const profile = await fetchUserProfile(userId);
+        var profile = await fetchUserProfile(userId);
         logToHtml("User profile retrieved.");
         
-        const posts = await fetchUserPosts(userId);
+        var posts = await fetchUserPosts(userId);
         logToHtml("User posts retrieved.");
         
-        const comments = await fetchPostComments(12459);
-        logToHtml("Comments retrieved for post id 12459.");
+        // Loop through posts and await fetchPostComments() for each post.
+        var comments = [];
+        
+        for (let post of posts) {
+            const commentList = await fetchPostComments(post.postId);
+            comments.push(commentList);
+            
+            logToHtml(`Comments retrieved for post id ${post.postId}.`);
+        }
+        
         
         const endTime = Date.now(); // Timestamp at the end of fetch.
         logToHtml(`Sequential fetch took ${endTime - startTime}ms`);
         
         // Return all the data combined
-        return [profile, posts, comments];
+        return {profile: profile, posts: posts, comments: comments};
         
+    // ------ PART 4: Adding Error Handling ------
+    // TASK G: Handle Errors Gracefully
+    // Return partial successful data if possible.
     } catch (error) {
         errorToHtml("Error in sequential fetch: " + error.message);
+        
+        // Quick shortcuts to conditional statements (for organization and less cluttered if statements)
+        const profileNull = (profile === null || typeof profile === 'undefined');
+        const postsNull = (posts === null || typeof posts === 'undefined');
+        const commentsNull = (comments === null || typeof comments === 'undefined');
+        
+        const data = {};
+        
+        if (!(profileNull && postsNull && commentsNull)) {
+            
+            errorToHtml("Returning partial data.");
+            if (!profileNull)   { data.profile = profile; }
+            if (!postsNull)     { data.posts = posts; }
+            if (!commentsNull)  { data.comments = comments; }
+        }
+        
+        return data;
     }
 }
 
@@ -100,11 +136,11 @@ async function parallelDataFetch(userId) {
     
     try {
         // Fetch user profile and posts simultaneously using Promise.all();
-        const [profile, posts] = await Promise.all([fetchUserProfile(userId), fetchUserPosts(userId)]);
+        var [profile, posts] = await Promise.all([fetchUserProfile(userId), fetchUserPosts(userId)]);
         logToHtml("User and posts retrieved simultaneously.");
         
         // Fetch all comments for all posts in parallel using posts.map() with fetchPostComments();
-        posts.map(function(post) {
+        var comments = posts.map(function(post) {
            return fetchPostComments(post.postId);
         });
         
@@ -112,13 +148,54 @@ async function parallelDataFetch(userId) {
         logToHtml(`All comments for all posts of user ${userId} fetched. Parallel fetch took ${endTime - startTime}ms`);
         
         // Return all data combined.
-        return [profile, posts];        
+        return {profile: profile, posts: posts, comments: comments};
         
+    // ------ PART 4: Adding Error Handling ------
+    // TASK G: Handle Errors Gracefully
+    // Return partial successful data if possible.
     } catch (error) {
         errorToHtml("Error in parallel fetch: " + error.message);
+        
+        // Quick shortcuts to conditional statements (for organization and less cluttered if statements)
+        const profileNull = (profile === null || typeof profile === 'undefined');
+        const postsNull = (posts === null || typeof posts === 'undefined');
+        const commentsNull = (comments === null | typeof comments === 'undefined');
+        
+        const data = {};
+        
+        if (!(profileNull && postsNull && commentsNull)) {
+            
+            errorToHtml("Returning partial data.");
+            if (!profileNull)   { data.profile = profile; }
+            if (!postsNull)     { data.posts = posts; }
+            if (!commentsNull)  { data.comments = comments; }
+        }
+        
+        return data;
     }
 }
 
-logToHtml("(Test to check logging into HTML, unrelated to the actual code)");
-errorToHtml("(Test error)");
-logToHtml("(Test again for separating lines)");
+// ------ PART 5: Main Function ------
+/*async function getUserContent(userId) {
+    logToHtml("=== Fetching all user content ===");
+    
+    try {
+        // Step 1: Fetch user profile
+        const user = await fetchUserProfile();
+    }
+}*/
+
+// ------ PART 6: Display results in HTML ------
+// When user clicks the Sequential Fetch button, call sequentialDataFetch() and display results in HTML.
+document.getElementById("sequentialFetch").addEventListener("click", async function(event) {
+    sequentialDataFetch(Math.floor(Math.random() * 10000));
+    
+    // TODO: call helper function to display data nicely.
+});
+
+// When user clicks the Parallel Fetch button, call parallelDataFetch() and display results in HTML.
+document.getElementById("parallelFetch").addEventListener("click", async function(event) {
+    parallelDataFetch(Math.floor(Math.random() * 10000));
+    
+    // TODO: call helper function to display data nicely.
+});
