@@ -1,3 +1,17 @@
+// HELPER FUNCTION FOR LOGGING TO CONSOLE AND HTML SIMULTANEOUSLY.
+const resultsElement = document.getElementById("results");
+
+function logToHtml(text) {
+    resultsElement.innerHTML += (text + '<br>');
+    console.log(text);
+}
+
+function errorToHtml(text) {
+    resultsElement.innerHTML += "<b style=\"color: red;\">" + text + "</b> <br>";
+    console.error(text);
+}
+
+
 // ------ PART 2: Data Fetching Functions ------
 
 // Task A: Returns a Promise that uses setTimeout() to create a 1-second delay.
@@ -50,3 +64,61 @@ function fetchPostComments(postId) {
         }, 2000);
     });
 }
+
+// ------ PART 3: Sequential vs. Parallel Fetching ------
+
+// Task D: Sequential Fetching
+// Fetches data from fetchUserProfile(), fetchUserPosts() and fetchPostComments() one at a time.
+async function sequentialDataFetch(userId) {
+    const startTime = Date.now(); // Track a timestamp of the current moment.
+    
+    try {
+        const profile = await fetchUserProfile(userId);
+        logToHtml("User profile retrieved.");
+        
+        const posts = await fetchUserPosts(userId);
+        logToHtml("User posts retrieved.");
+        
+        const comments = await fetchPostComments(12459);
+        logToHtml("Comments retrieved for post id 12459.");
+        
+        const endTime = Date.now(); // Timestamp at the end of fetch.
+        logToHtml(`Sequential fetch took ${endTime - startTime}ms`);
+        
+        // Return all the data combined
+        return [profile, posts, comments];
+        
+    } catch (error) {
+        errorToHtml("Error in sequential fetch: " + error.message);
+    }
+}
+
+// Task E: Parallel Fetching
+// Fetches data from all of the previous fetching functions at once.
+async function parallelDataFetch(userId) {
+    const startTime = Date.now(); // Track the current timestamp.
+    
+    try {
+        // Fetch user profile and posts simultaneously using Promise.all();
+        const [profile, posts] = await Promise.all([fetchUserProfile(userId), fetchUserPosts(userId)]);
+        logToHtml("User and posts retrieved simultaneously.");
+        
+        // Fetch all comments for all posts in parallel using posts.map() with fetchPostComments();
+        posts.map(function(post) {
+           return fetchPostComments(post.postId);
+        });
+        
+        const endTime = Date.now();
+        logToHtml(`All comments for all posts of user ${userId} fetched. Parallel fetch took ${endTime - startTime}ms`);
+        
+        // Return all data combined.
+        return [profile, posts];        
+        
+    } catch (error) {
+        errorToHtml("Error in parallel fetch: " + error.message);
+    }
+}
+
+logToHtml("(Test to check logging into HTML, unrelated to the actual code)");
+errorToHtml("(Test error)");
+logToHtml("(Test again for separating lines)");
