@@ -1,5 +1,6 @@
 // HELPER FUNCTION FOR LOGGING TO CONSOLE AND HTML SIMULTANEOUSLY.
 const resultsElement = document.getElementById("results");
+const displayElement = document.getElementById("data");
 
 function logToHtml(text) {
     resultsElement.innerHTML += (text + '<br>');
@@ -46,9 +47,9 @@ async function fetchUserPosts(userId) {
             }
             
             const posts = [ 
-                {postId: 12459, userId: userId, title: "Sample post 1", content: "Lorem ipsum..."},
-                {postId: 24902, userId: userId, title: "Sample post 2", content: "...dolor sit amet..."},
-                {postId: 2305,  userId: userId, title: "Sample post 3", content: "...consectetur adipiscing elit."}
+                {postId: 12459, userId: userId, title: "Sample post title", content: "Lorem ipsum..."},
+                {postId: 24902, userId: userId, title: "Sample post title", content: "...dolor sit amet..."},
+                {postId: 2305,  userId: userId, title: "Sample post title", content: "...consectetur adipiscing elit."}
             ];
             
             resolve(posts);
@@ -140,6 +141,7 @@ async function parallelDataFetch(userId) {
         logToHtml("User and posts retrieved simultaneously.");
         
         // Fetch all comments for all posts in parallel using posts.map() with fetchPostComments();
+        // The Promise.all() is required to get the actual contents of all post comments, since they too are Promises.
         var comments = await Promise.all(posts.map(async function(post) {
             
             return fetchPostComments(post.postId);
@@ -177,6 +179,7 @@ async function parallelDataFetch(userId) {
 }
 
 // ------ PART 5: Main Function ------
+// Skipped because it's really redundant.
 /*async function getUserContent(userId) {
     logToHtml("=== Fetching all user content ===");
     
@@ -187,17 +190,57 @@ async function parallelDataFetch(userId) {
 }*/
 
 // ------ PART 6: Display results in HTML ------
+// TASK I: Connect buttons to functions
 // When user clicks the Sequential Fetch button, call sequentialDataFetch() and display results in HTML.
 document.getElementById("sequentialFetch").addEventListener("click", async function(event) {
-    sequentialDataFetch(Math.floor(Math.random() * 10000));
+    displayElement.innerHTML = "<h2>Fetching data, please wait...</h2>";
     
-    // TODO: call helper function to display data nicely.
+    const result = await sequentialDataFetch(Math.floor(Math.random() * 10000));
+    logToHtml(JSON.stringify(result, null, 2) + '\n');
+    
+    // call helper function to display data nicely.
+    displayResults(result, displayElement);
 });
 
 // When user clicks the Parallel Fetch button, call parallelDataFetch() and display results in HTML.
 document.getElementById("parallelFetch").addEventListener("click", async function(event) {
-    const result = await parallelDataFetch(Math.floor(Math.random() * 10000))
-    logToHtml(JSON.stringify(result, null, 2));
+    displayElement.innerHTML = "<h2>Fetching data, please wait...</h2>";
     
-    // TODO: call helper function to display data nicely.
+    const result = await parallelDataFetch(Math.floor(Math.random() * 10000))
+    logToHtml(JSON.stringify(result, null, 2) + '\n');
+    
+    // call helper function to display data nicely.
+    displayResults(result, displayElement);
 });
+
+// TASK J: Format the output
+// Helper function to display the data in nice HTML + CSS results.
+function displayResults(data, container) {
+    let innerHTML = "";
+    
+    if ("profile" in data) {
+        innerHTML += `<div class="profile"><div class="profileRect"></div>
+        <div><h2>${data.profile.name}</h2><h3>${data.profile.username} #${data.profile.id}</h3><h3>${data.profile.email}</h3></div></div>`;
+    }
+    
+    if ("posts" in data) {
+        for (let i = 0; i < data.posts.length; i++) {
+            let currentPost = data.posts[i];
+            
+            innerHTML += `<div class="post">
+            <h2>Post ${currentPost.postId} of #${currentPost.userId}<br>${currentPost.title}</h2>
+            <p>${currentPost.content}</p><br>
+            <h3>Comments:</h3>`;
+            
+            for (let comment of data.comments[i]) {
+                
+                innerHTML += `<h3>#${comment.commentId}: ${comment.postId}: ${comment.username}</h3>
+                <p>${comment.comment}</p><br>`;
+            }
+            innerHTML += "</div>"
+        }
+    }
+    
+    
+    container.innerHTML = innerHTML;
+}

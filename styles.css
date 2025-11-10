@@ -6,6 +6,10 @@ html, body {
     padding: 0.5em;
 }
 
+#data * {
+    margin: 0;
+}
+
 button {
     line-height: 1.5;
     background-color: rgb(43,43,43);
@@ -30,6 +34,43 @@ button:hover {
     border-width: 2px;
 }
 
+#results {
+    background-color: rgb(43,43,43);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 18px;
+}
+
 button:active {
     background-color: rgb(93, 93, 93);
+}
+
+.post {
+    padding: 1em;
+    margin: 1.5em 0 !important;
+    background-color: rgb(43, 43, 43);
+    border: 1px solid lavender;
+    box-shadow: 0 0 10px lavender, 0 0 10px black inset;
+    border-radius: 12px;
+}
+
+.profile {
+    padding: 1em;
+    margin: 1.5em 0 !important;
+    background-color: rgb(43, 43, 43);
+    border: 1px solid lavender;
+    box-shadow: 0 0 10px lavender, 0 0 10px black inset;
+    border-radius: 12px;
+    
+    max-width:fit-content;
+    display:flex;
+    flex-direction: row;
+}
+
+.profileRect {
+    min-height: max-content;
+    width: 82px;
+    margin-right: 10px !important;
+    background-color: rgb(63,63,63);
+    border: 1px solid grey;
+    border-radius: 4px; 
 }
