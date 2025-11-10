@@ -33,7 +33,7 @@ function fetchUserProfile(userId) {
 
 // Task B: Returns a Promise that uses setTimeout() to create a 1.5-second delay.
 // After the delay finishes, the Promise returns an array of 3 post objects.
-function fetchUserPosts(userId) {
+async function fetchUserPosts(userId) {
     return new Promise(function(resolve, reject) {
         
         setTimeout(function() {
@@ -58,7 +58,7 @@ function fetchUserPosts(userId) {
 
 // Task C: Returns a Promise that uses setTimeout() to create a 2-second delay.
 // After the delay finishes, the Promise returns an array of 3 comment objects.
-function fetchPostComments(postId) {
+async function fetchPostComments(postId) {
     return new Promise(function(resolve, reject) {
         
         setTimeout(function() {
@@ -99,7 +99,7 @@ async function sequentialDataFetch(userId) {
         
         
         const endTime = Date.now(); // Timestamp at the end of fetch.
-        logToHtml(`Sequential fetch took ${endTime - startTime}ms`);
+        logToHtml(`<b>Sequential fetch took ${endTime - startTime}ms</b>`);
         
         // Return all the data combined
         return {profile: profile, posts: posts, comments: comments};
@@ -140,12 +140,13 @@ async function parallelDataFetch(userId) {
         logToHtml("User and posts retrieved simultaneously.");
         
         // Fetch all comments for all posts in parallel using posts.map() with fetchPostComments();
-        var comments = posts.map(function(post) {
-           return fetchPostComments(post.postId);
-        });
+        var comments = await Promise.all(posts.map(async function(post) {
+            
+            return fetchPostComments(post.postId);
+        }));
         
         const endTime = Date.now();
-        logToHtml(`All comments for all posts of user ${userId} fetched. Parallel fetch took ${endTime - startTime}ms`);
+        logToHtml(`<b>All comments for all posts of user ${userId} fetched. Parallel fetch took ${endTime - startTime}ms</b>`);
         
         // Return all data combined.
         return {profile: profile, posts: posts, comments: comments};
@@ -195,7 +196,8 @@ document.getElementById("sequentialFetch").addEventListener("click", async funct
 
 // When user clicks the Parallel Fetch button, call parallelDataFetch() and display results in HTML.
 document.getElementById("parallelFetch").addEventListener("click", async function(event) {
-    parallelDataFetch(Math.floor(Math.random() * 10000));
+    const result = await parallelDataFetch(Math.floor(Math.random() * 10000))
+    logToHtml(JSON.stringify(result, null, 2));
     
     // TODO: call helper function to display data nicely.
 });
